@@ -12,7 +12,7 @@ function Get-VMPoolerStatus {
     if ($URL -eq '') { $URL = $VMPoolerServiceURI }
     if ($URL -eq '') { Write-Error "Missing VMPooler URL"; return }
     
-    Invoke-VMPoolerAPI -url $URL -route 'status' -NoAuth
+    Invoke-VMPoolerAPI -url $URL -route 'status' -NoAuth -NoParseResponse
   }
   
   End {

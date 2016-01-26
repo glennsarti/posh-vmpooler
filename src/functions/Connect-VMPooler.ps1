@@ -3,6 +3,9 @@ function Connect-VMPooler {
   param (
     [Parameter(Mandatory=$true,ValueFromPipeline=$true)]
     [string]$URL = ''
+
+    ,[Parameter(Mandatory=$false,ValueFromPipeline=$false)]
+    [PSCredential]$Credential = [System.Management.Automation.PSCredential]::Empty
   )
   
   Begin {
@@ -11,7 +14,7 @@ function Connect-VMPooler {
   Process {
     if ($URL.EndsWith('/')) { $URL = $URL.SubString(0,$URL.Length - 1)}
     try {
-      $result = Get-VMPoolerStatus -URL $URL
+      Get-VMPoolerStatus -URL $URL | Out-Null
     }
     catch {
       Write-Error "Could not connect to VMPooler at $url"
@@ -19,6 +22,10 @@ function Connect-VMPooler {
     }
     
     $Script:VMPoolerServiceURI = $URL
+    
+    if ($Credential -ne [System.Management.Automation.PSCredential]::Empty) {
+      $Script:VMPoolCredential = $Credential
+    }
   }
   
   End {
