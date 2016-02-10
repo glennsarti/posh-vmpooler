@@ -42,7 +42,7 @@ Function Invoke-VMPoolerAPI([string]$url = '',$route,$payload = $null,[switch]$N
     
   [System.Net.ServicePointManager]::CertificatePolicy = new-object IDontCarePolicy 
   $response = Invoke-WebRequest @props -Verbose
-  
+
   $objResponse = ($response.Content | ConvertFrom-JSON)
   
   if ($NoParseResponse)
@@ -53,7 +53,7 @@ Function Invoke-VMPoolerAPI([string]$url = '',$route,$payload = $null,[switch]$N
   if (-not $objResponse.ok)
   {
     Write-Error "Error while invoking Pooler API"
-   $objResponse = $null
+    $objResponse = $null
   }
   else
   {

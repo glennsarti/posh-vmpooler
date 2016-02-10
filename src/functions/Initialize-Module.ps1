@@ -11,3 +11,11 @@ Invoke-Command -ScriptBlock {
     $Script:VMPoolCredential = New-Object -Type System.Management.Automation.PSCredential($username,$secpwd)
   }
 } | Out-Null
+
+#Load Required Assemblies
+Write-Verbose 'Loading WPF assemblies'
+Add-Type -assemblyName PresentationFramework
+Add-Type -assemblyName PresentationCore
+Add-Type -assemblyName WindowsBase
+Write-Verbose 'Loading Windows Forms assemblies'
+Add-Type -AssemblyName System.Windows.Forms    

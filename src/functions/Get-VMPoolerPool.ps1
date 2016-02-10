@@ -9,7 +9,7 @@ function Get-VMPoolerPool {
   }
   
   Process {
-    (Invoke-VMPoolerAPI -route 'vm' -NoAuth).GetEnumerator() | ? { $_ -match $Filter } |  % { Write-Output ([string]$_) }
+    (Invoke-VMPoolerAPI -route 'vm' -NoAuth -NoParseResponse).GetEnumerator() | ? { $_ -match $Filter } |  % { Write-Output ([string]$_) }
   }
   
   End {
