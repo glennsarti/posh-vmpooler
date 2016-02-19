@@ -6,28 +6,20 @@
         Title="MainWindow" Height="600" Width="800">
   <!-- http://www.wpf-tutorial.com/list-controls/itemscontrol/ -->
   <!-- http://brianlagunas.com/free-metro-light-and-dark-themes-for-wpf-and-silverlight-microsoft-controls/ -->
+  <!-- http://www.jonathanantoine.com/2012/03/05/winjs-out-of-the-box-available-icons/ -->
+  <!-- https://www.dropbox.com/sh/r83r4rud2lxqyh4/W2VrgtT1nn/glyph%20win%208.pdf -->
+
   <Window.Resources>
     <XmlDataProvider x:Key="PoolList" XPath="pools" x:Name="xmlPoolList">
       <x:XData>
-        <pools xmlns="">
-        </pools>
+        <pools xmlns="" />
       </x:XData>
-      <!-- <report name="report1" datemodified="dd mmm yyyy HH:mm:ss">C:\Report1.xml</report> -->
     </XmlDataProvider>
 
     <XmlDataProvider x:Key="PoolerDetail" XPath="poolerdetail" x:Name="xmlPoolerDetail">
       <x:XData>
-        <poolerdetail xmlns="">
-          <token name="token1" created="sometime" lastuse="sometime">
-            <vm name="vm1" />
-          </token>
-          <token name="token2" created="sometime" lastuse="sometime">
-            <vm name="vm2" />
-            <vm name="vm3" />
-          </token>
-        </poolerdetail>
+        <poolerdetail xmlns="" />
       </x:XData>
-      <!-- <report name="report1" datemodified="dd mmm yyyy HH:mm:ss">C:\Report1.xml</report> -->
     </XmlDataProvider>
 
   </Window.Resources>
@@ -56,82 +48,122 @@
         </StackPanel>
       </Expander>
 
-      <ItemsControl DataContext="{DynamicResource PoolList}" ItemsSource="{Binding XPath=/pools/pool}" HorizontalContentAlignment="Stretch" ScrollViewer.CanContentScroll="True" ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto">
-        <ItemsControl.ItemTemplate>
-          <DataTemplate>
-            <StackPanel Orientation="Horizontal" Margin="2">
-              <StackPanel.Background>
-                <SolidColorBrush Color="{DynamicResource {x:Static SystemColors.ControlLightColorKey}}"/>
-              </StackPanel.Background>
-              <Button Content="Add" Padding="5" HorizontalAlignment="Right" Margin="2" Tag="{Binding XPath=.}" Name="butAddPool" />
-              <TextBlock Text="{Binding XPath=.}" Padding="5" HorizontalAlignment="Left" Margin="2"/>
-            </StackPanel>
-          </DataTemplate>
-        </ItemsControl.ItemTemplate>
-      </ItemsControl>
+      <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+        <ItemsControl DataContext="{DynamicResource PoolList}" ItemsSource="{Binding XPath=/pools/pool}" HorizontalContentAlignment="Stretch">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <StackPanel Orientation="Horizontal" Margin="2">
+                <StackPanel.Background>
+                  <SolidColorBrush Color="{DynamicResource {x:Static SystemColors.ControlLightColorKey}}"/>
+                </StackPanel.Background>
+                <Button Content="Add" Padding="5" HorizontalAlignment="Right" Margin="2" Tag="{Binding XPath=.}" Name="butAddPool" />
+                <TextBlock Text="{Binding XPath=.}" Padding="5" HorizontalAlignment="Left" Margin="2"/>
+              </StackPanel>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </ScrollViewer>
     </DockPanel>
     <GridSplitter Grid.Column="1" HorizontalAlignment="Right" ResizeDirection="Columns" ResizeBehavior="PreviousAndNext" Width="5" Background="#FFBCBCBC" Height="Auto" VerticalAlignment="Stretch" Margin="0" />
 
-    <ItemsControl Grid.Column="2"
-                  DataContext="{DynamicResource PoolerDetail}"
-                  ItemsSource="{Binding XPath=token}"  >
+    <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+    <ItemsControl DataContext="{DynamicResource PoolerDetail}" ItemsSource="{Binding XPath=token/vm}">
       <ItemsControl.ItemTemplate>
         <DataTemplate>
 
-          <Border>
-            <StackPanel>
-              <TextBlock Text="{Binding XPath=@name}" Padding="2" />
-              <ListBox ItemsSource="{Binding XPath=vm}">
-                <ListBox.ItemTemplate>
+          <Border
+            Margin="5" Padding="5"
+            BorderBrush="{DynamicResource {x:Static SystemColors.ControlDarkBrushKey}}"
+            BorderThickness="1"
+            Background="{DynamicResource {x:Static SystemColors.InactiveCaptionBrushKey}}">
+
+            <StackPanel Orientation="Vertical">
+              <Grid>
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="60"/>
+              </Grid.ColumnDefinitions>
+              <TextBox Text="{Binding XPath=@FQDN}" FontSize="16" IsReadOnly="True" Grid.Column="0">
+                <TextBox.Style>
+                  <Style TargetType="TextBox">
+                    <Setter Property="Template">
+                      <Setter.Value>
+                        <ControlTemplate>
+                          <Border x:Name="PART_ContentHost" />
+                        </ControlTemplate>
+                      </Setter.Value>
+                    </Setter>
+                  </Style>
+                </TextBox.Style>
+              </TextBox>
+              <Button  Grid.Column="1" FontFamily="Segoe UI Symbol" Padding="2" Margin="2" ToolTip="Remove VM" Foreground="#FFF91E1E" HorizontalAlignment="Right">&#xE107;</Button>
+            </Grid>
+
+              <TextBlock Text="{Binding XPath=@template}" />
+              <!-- Tags -->
+              <ItemsControl ItemsSource="{Binding XPath=tag}">
+                <ItemsControl.ItemsPanel>
+                  <ItemsPanelTemplate>
+                    <WrapPanel Orientation="Horizontal" />
+                  </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
                   <DataTemplate>
-                    <StackPanel>
-                      <TextBlock Text="{Binding XPath=@name}" />
-
-                      <Grid Margin="20" Width="100">
-                        <ProgressBar Minimum="0" Maximum="100" Value="75" Name="pbStatus" />
-                        <TextBlock Text="{Binding ElementName=pbStatus, Path=Value, StringFormat={}{0:0}%}" HorizontalAlignment="Center" VerticalAlignment="Center" />
-                      </Grid>
-
+                    <StackPanel Orientation="Horizontal">
+                      <Border BorderThickness="1" Margin="5" Padding="3,1" BorderBrush="{DynamicResource {x:Static SystemColors.ControlDarkBrushKey}}"
+                              Background="{DynamicResource {x:Static SystemColors.ControlLightBrushKey}}">
+                        <StackPanel Orientation="Horizontal">
+                          <TextBlock FontFamily="Segoe UI Symbol" HorizontalAlignment="Center" VerticalAlignment="Center">&#xE141;</TextBlock>
+                          <TextBlock Text="{Binding XPath=@key}" />
+                          <TextBlock Text=": " />
+                          <TextBlock Text="{Binding XPath=@value}" />
+                        </StackPanel>
+                      </Border>
                     </StackPanel>
                   </DataTemplate>
-                </ListBox.ItemTemplate>
-              </ListBox>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+
+              <Grid>
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="*"/>
+                  <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <Border Grid.Column="0" HorizontalAlignment="Left" BorderThickness="1" Margin="5" Padding="3,1"
+                        BorderBrush="{DynamicResource {x:Static SystemColors.ControlDarkBrushKey}}" Background="{DynamicResource {x:Static SystemColors.ControlLightBrushKey}}"
+                        >
+                  <StackPanel Orientation="Horizontal">
+                    <TextBlock
+                    FontFamily="Segoe UI Symbol"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    >&#xE121;</TextBlock>
+                      <TextBlock Text="Expires in "/>
+                      <TextBlock Text="{Binding XPath=@MinutesLeft}" />
+                  </StackPanel>
+                </Border>
+                <StackPanel Orientation="Horizontal" Grid.Column="1" HorizontalAlignment="Right">
+
+                  <Button FontFamily="Segoe UI Symbol" Padding="2" Margin="2" ToolTip="Add more time">&#xE121;&#xE109;</Button>
+                  <Button FontFamily="Segoe UI Symbol" Padding="2" Margin="2" ToolTip="Connect via RDP">&#xE148;</Button>
+                </StackPanel>
+              </Grid>
+
+              <Expander Header="More information..." IsExpanded="False" ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto">
+                <StackPanel>
+                  <WrapPanel Orientation="Horizontal">
+                  </WrapPanel>
+                  <TextBlock>Some more info here</TextBlock>
+                </StackPanel>
+              </Expander>
+
             </StackPanel>
           </Border>
 
         </DataTemplate>
       </ItemsControl.ItemTemplate>
     </ItemsControl>
-
-    <StackPanel  Grid.Column="2" Visibility="Hidden">
-
-      <!-- Per Token-->
-      <StackPanel Orientation="Vertical">
-
-        <!-- Token Details-->
-        <Grid Margin="10,10,10,0">
-          <Grid.Background>
-            <SolidColorBrush Color="{DynamicResource {x:Static SystemColors.MenuHighlightColorKey}}"/>
-          </Grid.Background>
-          <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*" MinWidth="50"/>
-            <ColumnDefinition Width="50"/>
-          </Grid.ColumnDefinitions>
-          <TextBlock Grid.Column="0" Text="Token Name" Padding="2" />
-          <Button Grid.Column="1" Content="Del" Margin="1" />
-        </Grid>
-
-        <!-- VM Details -->
-        <Grid  Margin="10,2">
-          <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*" MinWidth="50"/>
-            <ColumnDefinition Width="50"/>
-          </Grid.ColumnDefinitions>
-
-          <TextBlock Grid.Column="0" Text="VM Name (pool name)" Padding="2" />
-        </Grid>
-      </StackPanel>
-
-    </StackPanel>
+    </ScrollViewer>
   </Grid>
 </Window>

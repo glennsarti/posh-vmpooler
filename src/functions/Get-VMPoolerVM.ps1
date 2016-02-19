@@ -19,15 +19,18 @@ Function Get-VMPoolerVM {
       $objToken = ($result."$vmName")
       
       Add-Member -InputObject $objToken -MemberType NoteProperty -Name 'VMName' -Value $vmName
+      Add-Member -InputObject $objToken -MemberType NoteProperty -Name 'FQDN' -Value "$($vmName).$($objToken.domain)"
 
       $ttl = [int]$objToken.lifetime
       $age = [int]$objToken.running
       
       $Started = (Get-Date).AddMinutes(-60*$age)
       $Expires = $Started.AddHours($ttl)
+      $MinutesLeft = (New-Timespan -End $Expires).TotalMinutes
 
       Add-Member -InputObject $objToken -MemberType NoteProperty -Name "Started" -Value $Started.ToString($dateFormat)
       Add-Member -InputObject $objToken -MemberType NoteProperty -Name "Expires" -Value $Expires.ToString($dateFormat)
+      Add-Member -InputObject $objToken -MemberType NoteProperty -Name "MinutesLeft" -Value $MinutesLeft.ToString("0")
 
       # $AllVMList = @()
       # Get-Member -InputObject ($objToken.vms) -MemberType NoteProperty | % {

@@ -1,3 +1,46 @@
+Function Get-VMPoolerAllVMsAsXML {
+  [xml]$xmlDoc = '<poolerdetail xmlns=""></poolerdetail>'
+  Get-VMPoolerToken | Get-VMPoolerTokenDetail | % {
+    # Convert the tokens
+    $xmlToken = $xmlDoc.CreateElement('token')
+    $xmlToken.SetAttribute('name',$_.TokenID)
+    $xmlToken.SetAttribute('created',$_.created)
+    $xmlToken.SetAttribute('lastuse',$_.last)
+    $xmlDoc.poolerdetail.AppendChild($xmlToken) | Out-Null
+    
+    # Convert all the VMs
+    $_.VMs_all | % { Get-VMPoolerVM -VM $_ } | % {
+      $xmlVM = $xmlDoc.CreateElement('vm')
+      $xmlVM.SetAttribute('name',$_.VMName)
+      $xmlVM.SetAttribute('domain',$_.domain)
+      $xmlVM.SetAttribute('template',$_.template)
+      $xmlVM.SetAttribute('lifetime',$_.lifetime)
+      $xmlVM.SetAttribute('running',$_.running)
+      $xmlVM.SetAttribute('state',$_.state)
+      
+      if ($_.tags -ne $null) {
+        # Append tag elements
+        $tags = $_.tags
+        Get-Member -InputObject $_.tags -MemberType NoteProperty | % { 
+          $tagName = $_.Name
+          $xmlNode = $xmlDoc.CreateElement('tag')
+          $xmlNode.SetAttribute('key',$tagName)
+          $xmlNode.SetAttribute('value',$tags."$tagName")
+          $xmlVM.AppendChild($xmlNode) | Out-Null
+        }
+      }
+      
+      $xmlVM.SetAttribute('FQDN',$_.FQDN)
+      $xmlVM.SetAttribute('Started',$_.Started)
+      $xmlVM.SetAttribute('Expires',$_.Expires)
+      $xmlVM.SetAttribute('MinutesLeft',$_.MinutesLeft)
+      $xmlToken.AppendChild($xmlVM) | Out-Null
+    }
+  }
+  Write-Output $xmlDoc
+}
+
+
 function Get-VMPoolerPoolAsXML {
   [xml]$xmlDoc = '<pools xmlns=""></pools>'
   
@@ -6,11 +49,8 @@ function Get-VMPoolerPoolAsXML {
     $xmlNode.innerText = $_.ToString()
     $xmlDoc.pools.AppendChild($xmlNode) | Out-Null   
   }
-#write-host $xmlDoc.innerXml.GetType().ToString()  
   Write-Output $xmlDoc
 }
-
-
 
 function Start-VMPoolerUI {
   [cmdletBinding(SupportsShouldProcess=$false,ConfirmImpact='Low')]
@@ -72,6 +112,7 @@ function Start-VMPoolerUI {
     
     # Write the xml document to the XAML for databinding
     (Get-WPFControl 'xmlPoolList' -Window $thisWindow).Document = (Get-VMPoolerPoolAsXML)
+    (Get-WPFControl 'xmlPoolerDetail' -Window $thisWindow).Document = (Get-VMPoolerAllVMsAsXML)
     
     # Show the GUI
     Write-Verbose "Showing the window..."
