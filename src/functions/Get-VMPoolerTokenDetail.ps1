@@ -18,15 +18,17 @@ Function Get-VMPoolerTokenDetail {
       Add-Member -InputObject $objToken -MemberType NoteProperty -Name 'TokenID' -Value $tokenName
 
       $AllVMList = @()
-      Get-Member -InputObject ($objToken.vms) -MemberType NoteProperty | % {
-        $VMState = $_.Name
-        
-        $StateVMList = @()
-        $objToken.vms."$VMState" | % {
-          $VMName = $_.ToString()
+      if ($objToken.vms -ne $null) {        
+        Get-Member -InputObject ($objToken.vms) -MemberType NoteProperty | % {
+          $VMState = $_.Name
           
-          $AllVMList += $VMName
-          $StateVMList += $VMName
+          $StateVMList = @()
+          $objToken.vms."$VMState" | % {
+            $VMName = $_.ToString()
+            
+            $AllVMList += $VMName
+            $StateVMList += $VMName
+          }
         }
         Add-Member -InputObject $objToken -MemberType NoteProperty -Name "VMs_$($VMState)" -Value $StateVMList
       }

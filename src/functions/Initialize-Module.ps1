@@ -1,6 +1,12 @@
+# Need to move these 
+# $Script:VMPoolCredential = [System.Management.Automation.PSCredential]::Empty
+# $Script:VMPoolToken = [string](Get-Item ENV:'VMPOOL_TOKEN' -ErrorAction SilentlyContinue).Value
+# $Script:VMPoolTokenUsername = [string](Get-Item ENV:'LDAP_USERNAME' -ErrorAction SilentlyContinue).Value
+# $Script:VMPoolerServiceURI = [string](Get-Item ENV:'VMPOOL_URL' -ErrorAction SilentlyContinue).Value
 $Script:VMPoolCredential = [System.Management.Automation.PSCredential]::Empty
-$Script:VMPoolToken = [string](Get-Item ENV:'VMPOOL_TOKEN' -ErrorAction SilentlyContinue).Value
-$Script:VMPoolerServiceURI = [string](Get-Item ENV:'VMPOOL_URL' -ErrorAction SilentlyContinue).Value
+$Script:VMPoolToken = ''
+$Script:VMPoolTokenUsername = ''
+$Script:VMPoolerServiceURI = ''
 
 Invoke-Command -ScriptBlock {
   $username = [string](Get-Item ENV:'LDAP_USERNAME' -ErrorAction SilentlyContinue).Value
@@ -13,6 +19,7 @@ Invoke-Command -ScriptBlock {
 } | Out-Null
 
 #Load Required Assemblies
+# TODO These should be optional
 Write-Verbose 'Loading WPF assemblies'
 Add-Type -assemblyName PresentationFramework
 Add-Type -assemblyName PresentationCore
