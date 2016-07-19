@@ -29,11 +29,26 @@ Function Get-VMPoolerAllVMsAsXML {
           $xmlVM.AppendChild($xmlNode) | Out-Null
         }
       }
-      
+
+      # Create pretty version of minutes left
+      $PrettyMins = ''
+      if ($_.MinutesLeft -le 0) {
+        $PrettyMins = 'Now'
+      } else {
+        $ts = New-TimeSpan -Minutes $_.MinutesLeft
+        if ($ts.Hours -gt 0) {
+          $PrettyMins = "$($ts.Hours)h "
+        }
+        if ($ts.Minutes -gt 0) {
+          $PrettyMins = $PrettyMins + "$($ts.Minutes)m"
+        }
+      }
+
       $xmlVM.SetAttribute('FQDN',$_.FQDN)
       $xmlVM.SetAttribute('Started',$_.Started)
       $xmlVM.SetAttribute('Expires',$_.Expires)
       $xmlVM.SetAttribute('MinutesLeft',$_.MinutesLeft)
+      $xmlVM.SetAttribute('PrettyMinutesLeft',$PrettyMins)
       $xmlToken.AppendChild($xmlVM) | Out-Null
     }
   }
@@ -43,10 +58,39 @@ Function Get-VMPoolerAllVMsAsXML {
 
 function Get-VMPoolerPoolAsXML {
   [xml]$xmlDoc = '<pools xmlns=""></pools>'
-  
+
+  # Last match wins
+  $osIconList = @(
+    '^debian-;http://icons.iconarchive.com/icons/tatice/operating-systems/16/Debian-icon.png',
+    '^centos-;https://www.centos.org/favicon.ico',
+    '^cisco-;http://natisbad.org/RH0/img/cisco-icon.png',
+    '^ubuntu-;http://icons.iconarchive.com/icons/martz90/circle/16/ubuntu-icon.png',
+    '^redhat-;http://www.megaicons.net/static/img/icons_sizes/291/735/16/apps-redhat-icon.png',
+    '^fedora-;https://getfedora.org/static/images/fedora_infinity_140x140.png',
+    '^oracle-;http://www.idevelopment.info/images/mini_oracle_html_logo.gif',
+    '^opensuse-;https://www.opensuse.org/assets/images/favicon.png',
+    '^osx-;http://vignette4.wikia.nocookie.net/wowwiki/images/a/a2/Apple-icon-16x16.png/revision/latest?cb=20080327031709',
+    '^solaris-;https://www.iconattitude.com/icons/open_icon_library/apps/png/16/distributions-solaris.png',
+    '^sles-;http://blog.seader.us/favicon.ico',
+    '^scientific-;http://ftp.lip6.fr/pub/linux/distributions/scientific/graphics/version-3/icons/icon.png',
+    '^win;http://icons.iconarchive.com/icons/dakirby309/simply-styled/16/OS-Windows-icon.png',
+    '^win-20;http://www.easyhost.com/site/media/hw/icon-windows-small2.png',
+    '^win-10;http://www.tobiidynavox.com/wp-content/uploads/2015/10/Icon_windows8_16x16.png'
+  )
+
   Get-VMPoolerPool | % {
+    $poolName = $_.ToString() 
     $xmlNode = $xmlDoc.CreateElement('pool')
-    $xmlNode.innerText = $_.ToString()
+    $xmlNode.innerText = $poolName
+
+    # Get OS Icon
+    $osIcon = ''
+    $osIconList | % {
+      $os = $_.Split(';')
+      if ($poolName -match $os[0]) { $osIcon = $os[1] }
+    }
+    if ($osIcon -ne '') { $xmlNode.SetAttribute('osicon',$osIcon) }
+
     $xmlDoc.pools.AppendChild($xmlNode) | Out-Null   
   }
   Write-Output $xmlDoc
