@@ -9,6 +9,12 @@ Function Get-VMPoolerToken {
   }
   
   Process {
+    if (($Script:VMPoolCredential -eq [System.Management.Automation.PSCredential]::Empty) -and ($Script:VMPoolToken -ne '')) {
+      # Cached TokenID
+      $propertyHash = @{ 'TokenID' = $Script:VMPoolToken }
+      return (New-Object -TypeName PSObject -Property $propertyHash)      
+    }
+
     $result = Invoke-VMPoolerAPI -route 'token'
 
     Get-Member -InputObject $result -MemberType NoteProperty | % {
