@@ -9,7 +9,7 @@ Function Get-VMPoolerTokenDetail {
   }
   
   Process {
-    $result = Invoke-VMPoolerAPI -route "token/$TokenID"
+    $result = Invoke-VMPoolerAPI -route "token/$TokenID" -NoAuth
 
     Get-Member -InputObject $result -MemberType NoteProperty | % {
       $tokenName = $_.Name

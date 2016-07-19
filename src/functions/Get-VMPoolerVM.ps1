@@ -10,7 +10,7 @@ Function Get-VMPoolerVM {
   }
   
   Process {
-    $result = Invoke-VMPoolerAPI -route "vm/$VM"
+    $result = Invoke-VMPoolerAPI -route "vm/$VM" -NoAuth
 
     $dateFormat = 'yyyy-MM-dd HH:mm:ss zzz'
 
