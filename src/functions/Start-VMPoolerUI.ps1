@@ -108,8 +108,11 @@ function Start-VMPoolerUI {
     #   }
     # })
     
-    Connect-VMPooler -URL $URL -Credential $Credential | Out-Null
-    
+    if ($Credential -ne [System.Management.Automation.PSCredential]::Empty) {
+      Connect-VMPooler -URL $URL -Credential $Credential | Out-Null
+    } else {
+      Connect-VMPooler -URL $URL | Out-Null
+    } 
     # Write the xml document to the XAML for databinding
     (Get-WPFControl 'xmlPoolList' -Window $thisWindow).Document = (Get-VMPoolerPoolAsXML)
     (Get-WPFControl 'xmlPoolerDetail' -Window $thisWindow).Document = (Get-VMPoolerAllVMsAsXML)
