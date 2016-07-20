@@ -2,7 +2,7 @@ Function Get-VMPoolerVM {
   [cmdletBinding(SupportsShouldProcess=$false,ConfirmImpact='Low')]
   param (
     [Parameter(Mandatory=$true,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true)]
-    [Alias('hostname','Name')]
+    [Alias('hostname','Name','VMName')]
     [String]$VM
   )
   
@@ -22,7 +22,7 @@ Function Get-VMPoolerVM {
       Add-Member -InputObject $objToken -MemberType NoteProperty -Name 'FQDN' -Value "$($vmName).$($objToken.domain)"
 
       $ttl = [int]$objToken.lifetime
-      $age = [int]$objToken.running
+      $age = [double]$objToken.running
       
       $Started = (Get-Date).AddMinutes(-60*$age)
       $Expires = $Started.AddHours($ttl)
@@ -31,21 +31,6 @@ Function Get-VMPoolerVM {
       Add-Member -InputObject $objToken -MemberType NoteProperty -Name "Started" -Value $Started.ToString($dateFormat)
       Add-Member -InputObject $objToken -MemberType NoteProperty -Name "Expires" -Value $Expires.ToString($dateFormat)
       Add-Member -InputObject $objToken -MemberType NoteProperty -Name "MinutesLeft" -Value $MinutesLeft.ToString("0")
-
-      # $AllVMList = @()
-      # Get-Member -InputObject ($objToken.vms) -MemberType NoteProperty | % {
-      #   $VMState = $_.Name
-      #   
-      #   $StateVMList = @()
-      #   $objToken.vms."$VMState" | % {
-      #     $VMName = $_.ToString()
-      #     
-      #     $AllVMList += $VMName
-      #     $StateVMList += $VMName
-      #   }
-      #   Add-Member -InputObject $objToken -MemberType NoteProperty -Name "VMs_$($VMState)" -Value $StateVMList
-      # }
-      # Add-Member -InputObject $objToken -MemberType NoteProperty -Name "VMs_all" -Value $AllVMList
        
       Write-Output $objToken
     }
