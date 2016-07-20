@@ -7,6 +7,7 @@ $Script:VMPoolCredential = [System.Management.Automation.PSCredential]::Empty
 $Script:VMPoolToken = ''
 $Script:VMPoolTokenUsername = ''
 $Script:VMPoolerServiceURI = ''
+$Script:VMPoolerClientTag = 'posh-vmpool 0.1-alpha'
 
 Invoke-Command -ScriptBlock {
   $username = [string](Get-Item ENV:'LDAP_USERNAME' -ErrorAction SilentlyContinue).Value
