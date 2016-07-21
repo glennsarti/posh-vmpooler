@@ -48,13 +48,13 @@
               </DataTemplate>
             </ComboBox.ItemTemplate>
           </ComboBox>
-          <Button Content="Create VM" />
+          <Button Content="Create VM" x:Name="btnCreateVM" />
         </ToolBar>
       </ToolBarTray>
     </DockPanel>
 
     <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}">
-    <ItemsControl DataContext="{DynamicResource PoolerDetail}" ItemsSource="{Binding XPath=token/vm}">
+    <ItemsControl x:Name="VMList" DataContext="{DynamicResource PoolerDetail}" ItemsSource="{Binding XPath=token/vm}">
       <ItemsControl.ItemTemplate>
         <DataTemplate>
 
@@ -83,7 +83,7 @@
                   </Style>
                 </TextBox.Style>
               </TextBox>
-              <Button  Grid.Column="1" FontFamily="Segoe UI Symbol" Padding="2" Margin="2" ToolTip="Remove VM" Foreground="#FFF91E1E" HorizontalAlignment="Right">&#xE107;</Button>
+              <Button Tag="{Binding XPath=@name}" x:Name="butDeleteVM" Grid.Column="1" FontFamily="Segoe UI Symbol" Padding="2" Margin="2" ToolTip="Remove VM" Foreground="#FFF91E1E" HorizontalAlignment="Right">&#xE107;</Button>
             </Grid>
 
               <TextBlock Text="{Binding XPath=@template}" />

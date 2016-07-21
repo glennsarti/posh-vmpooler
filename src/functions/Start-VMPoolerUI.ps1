@@ -1,3 +1,113 @@
+function Add-EventHandler {
+    <#
+    .Synopsis
+        Adds an event handler to an object
+    .Description
+        Adds an event handler to an object.  If the object has a 
+        resource dictionary, it will add an eventhandlers 
+        hashtable to that object and it will store the event handler,
+        so it can be removed later.
+    .Example
+        $window = New-Window
+        $window | Add-EventHandler Loaded { $this.Top = 100 }
+    .Parameter Object
+        The Object to add an event handler to
+    .Parameter EventName
+        The name of the event (i.e. Loaded)
+    .Parameter Handler
+        The script block that will handle the event
+    .Parameter SourceType
+        For RoutedEvents, the type that originates the event
+    .Parameter PassThru 
+        If this is set, the delegate that is added to the object will
+        be returned from the function.
+    #>
+    param(
+    [Parameter(ValueFromPipeline=$true, Mandatory=$true, Position = 0, ParameterSetName="SimpleEvents")]
+    [ValidateNotNull()]
+    [Alias("Object")]
+    $InputObject,
+    
+    [Parameter(Mandatory=$true, Position=1)]
+    [String]
+    $EventName,
+    
+    [Parameter(Mandatory=$true, Position=2)]
+    [ScriptBlock]
+    $Handler,
+    
+    [Parameter(Mandatory=$false)]
+    [String]
+    $SourceType,
+    
+    [Switch]
+    $PassThru  
+    )
+    
+    process {
+        if($SourceType) {
+            $Type = $SourceType -as [Type]
+            if(!$Type) {
+                $Type = (Get-Command $SourceType).OutputType[0].Type
+            }
+            if(!$Type) {
+                Write-Error "Can't determine type from '$SourceType', you should pass either a Type or the name of a ShowUI command that outputs a UI Element. We will try the InputObject(s)"
+                $Type = $InputObject.GetType()
+            }
+        } else {
+            $Type = $InputObject.GetType()
+        }
+        
+        if ($eventName.StartsWith("On_")) {
+            $eventName = $eventName.Substring(3)
+        }
+        
+        $Event = $Type.GetEvent($EventName, [Reflection.BindingFlags]"IgnoreCase, Public, Instance")
+        if (-not $Event) {
+            Write-Error "Handler $EventName does not exist on $InputObject"
+            return
+        }       
+                
+        $realHandler = ([ScriptBlock]::Create(@"
+  `$sender = `$args[0]
+  `$e      = `$args[1]
+
+  $Handler
+"@)) -as $event.EventHandlerType
+
+#         $realHandler = ([ScriptBlock]::Create(@"
+# `$eventName = 'On_$eventName';
+# . Initialize-EventHandler
+# `$ErrorActionPreference = 'stop'
+            
+# $Handler
+
+# trap {                        
+#     . Write-WPFError `$_    
+#     continue
+# }
+# "@)) -as $event.EventHandlerType
+
+        if($realHandler -is [System.Windows.RoutedEventHandler] -and $Type::"${EventName}Event" ) {
+            $InputObject.AddHandler( $Type::"${EventName}Event", $realHandler )
+        } else {
+
+            if ($InputObject.Resources) {
+                
+                if (-not $InputObject.Resources.EventHandlers) {
+                    $InputObject.Resources.EventHandlers = @{}
+                }
+                $InputObject.Resources.EventHandlers."On_$EventName" = $realHandler #"
+            }
+            $event.AddEventHandler($InputObject, $realHandler)
+        }
+        if ($passThru) {
+            $RealHandler
+        }
+    }
+} 
+
+
 Function Get-VMPoolerAllVMsAsXML {
   [xml]$xmlDoc = '<poolerdetail xmlns=""></poolerdetail>'
   Get-VMPoolerToken | Get-VMPoolerTokenDetail | % {
@@ -25,7 +135,7 @@ Function Get-VMPoolerAllVMsAsXML {
           $tagName = $_.Name
           $xmlNode = $xmlDoc.CreateElement('tag')
           $xmlNode.SetAttribute('key',$tagName)
-          $xmlNode.SetAttribute('value',$tags."$tagName")
+          $xmlNode.SetAttribute('value',$tags."$tagName") #"
           $xmlVM.AppendChild($xmlNode) | Out-Null
         }
       }
@@ -137,20 +247,38 @@ function Start-VMPoolerUI {
 
     # Wire up the XAML
     Write-Verbose "Adding XAML event handlers..."
-    # (Get-WPFControl 'buttonBrowseReportPath' -Window $thisWindow).Add_Click({
-    #   # TODO Perhaps create a wizard to enter a server name and automatically create a UNC to the default puppet path? \\<server>\c$\ProgramData....
-    #   $dialogWindow = New-Object System.Windows.Forms.FolderBrowserDialog -Property @{
-    #     SelectedPath = (Get-WPFControl 'textReportPath' -Window $thisWindow).Text;
-    #     ShowNewFolderButton = $false;
-    #     Description = "Browse for Puppet Report path";
-    #   }
+
+    (Get-WPFControl 'btnCreateVM' -Window $thisWindow).Add_Click({
+      [string]$PoolName = (Get-WPFControl 'cboTemplates' -Window $thisWindow).SelectedValue
       
-    #   $result = $dialogWindow.ShowDialog()
-      
-    #   if ($result.ToString() -eq 'Ok') {
-    #     (Get-WPFControl 'textReportPath' -Window $thisWindow).Text = $dialogWindow.SelectedPath
-    #   }
-    # })
+      if ($Poolname -ne '') {
+        try {
+          New-VMPoolerVM -Pool $PoolName
+          (Get-WPFControl 'xmlPoolerDetail' -Window $thisWindow).Document = (Get-VMPoolerAllVMsAsXML)
+        } catch {
+          Write-Warning "Unable to create a VM in pool $PoolName"
+        } 
+      }
+    })
+
+    # Generic handler for all Buttons in the VMList ItemsControl
+    $objVMList = (Get-WPFControl 'VMList' -Window $thisWindow)
+    $objVMList | Add-EventHandler -EventName "Click" -SourceType 'System.Windows.Controls.Button' -Handler {
+      $ButtonTag = ''
+      try {
+        # Assumes an XML Attribute type that is databound
+        $ButtonTag = $e.OriginalSource.Tag.Value.ToString()
+      } catch { $ButtonTag = '' }
+      if ($ButtonTag -eq '') { return }
+
+      # Take action depending on the Button x:Name property
+      switch ($e.OriginalSource.Name) {
+        "butDeleteVM" {
+write-host "Delete VM $ButtonTag"
+        }
+        default { } #Write-Host "Unhandled click on button $($e.OriginalSource.Name)" }
+      }
+    }
     
     if ($Credential -ne [System.Management.Automation.PSCredential]::Empty) {
       Connect-VMPooler -URL $URL -Credential $Credential | Out-Null
