@@ -19,7 +19,7 @@ Function Set-VMPoolerVMOptions {
   
   Process {
     $body = @{}
-    if ($Tags.Count -gt 0) { $body.Tags = $Tags }
+    if ($Tags.Count -gt 0) { $body.tags = $Tags }
     if ($TimeToLive -gt 0) { $body.lifetime = $TimeToLive}
 
     if ($body.Count -gt 0) {

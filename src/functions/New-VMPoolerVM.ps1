@@ -17,9 +17,10 @@ Function New-VMPoolerVM {
     }
 
     try {
+      Start-Sleep -Milliseconds 100 | Out-Null
       Set-VMPoolerVMOptions -VM $newHostname -Tags (@{"client" = "$($Script:VMPoolerClientTag)"; "username" = "$($Script:VMPoolTokenUsername)"; })
     } catch {
-      Write-Warning "Unable to set tags on new vm"
+      Write-Warning "Unable to set tags on new vm.  $_"
     }
   }
   

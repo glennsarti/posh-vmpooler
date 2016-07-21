@@ -261,6 +261,10 @@ function Start-VMPoolerUI {
       }
     })
 
+    (Get-WPFControl 'butRefresh' -Window $thisWindow).Add_Click({
+      (Get-WPFControl 'xmlPoolerDetail' -Window $thisWindow).Document = (Get-VMPoolerAllVMsAsXML)
+    })
+
     # Generic handler for all Buttons in the VMList ItemsControl
     $objVMList = (Get-WPFControl 'VMList' -Window $thisWindow)
     $objVMList | Add-EventHandler -EventName "Click" -SourceType 'System.Windows.Controls.Button' -Handler {
@@ -274,9 +278,21 @@ function Start-VMPoolerUI {
       # Take action depending on the Button x:Name property
       switch ($e.OriginalSource.Name) {
         "butDeleteVM" {
-write-host "Delete VM $ButtonTag"
+          Remove-VMPoolerVM -VMName $ButtonTag | Out-Null
+          Start-Sleep -Milliseconds 100 # Just a small sleep to let pooler catchup...
+          (Get-WPFControl 'xmlPoolerDetail' -Window $thisWindow).Document = (Get-VMPoolerAllVMsAsXML)
         }
-        default { } #Write-Host "Unhandled click on button $($e.OriginalSource.Name)" }
+        "butConnectRDP" {
+          $vm = Get-VMPoolerVM -VM $ButtonTag
+          Start-Process -FilePath "mstsc.exe" -ArgumentList @("/v:$($vm.FQDN)") -Wait:$false -NoNewWindow:$false | Out-Null
+        }
+        "butConnectPS" {
+          $vm = Get-VMPoolerVM -VM $ButtonTag
+          Start-Process -FilePath "powershell.exe" `
+            -ArgumentList @('-NoExit',"`"& { Enter-PSSession -Computername '$($vm.FQDN)' -Credential Administrator }`"") `
+            -Wait:$false -NoNewWindow:$false | Out-Null
+        }
+        default { } # Write-Host "Unhandled click on button $($e.OriginalSource.Name)" }
       }
     }
     
