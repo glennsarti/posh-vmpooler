@@ -292,6 +292,30 @@ function Start-VMPoolerUI {
             -ArgumentList @('-NoExit',"`"& { Enter-PSSession -Computername '$($vm.FQDN)' -Credential Administrator }`"") `
             -Wait:$false -NoNewWindow:$false | Out-Null
         }
+        "butConnectSSH" {
+          $vm = Get-VMPoolerVM -VM $ButtonTag
+
+          $sshEXE = ''
+          # Find putty in search
+          if ($sshEXE -eq '') {
+            $puttyExe = (Get-Command 'putty.exe' -ErrorAction SilentlyContinue)
+            if ($puttyExe -ne $null) { $sshEXE = $puttyExe.Path }
+          }
+          # Find ssh in search
+          if ($sshEXE -eq '') {
+            $sshclientExe = (Get-Command 'ssh.exe' -ErrorAction SilentlyContinue)
+            if ($sshclientExe -ne $null) { $sshEXE = $sshclientExe.Path }
+          }
+          # Find in Git directory
+          $gitssh = 'C:\Program Files\Git\usr\bin\ssh.exe'
+          if ( (Test-Path -Path $gitssh) -and ($sshEXE -eq '') ) { $sshEXE = $gitssh}
+
+          if ($sshEXE -eq '') { Write-Warning "Could not find an SSH Client"; return; }
+
+          Start-Process -FilePath $sshEXE `
+            -ArgumentList @("$($vm.FQDN)") `
+            -Wait:$false -NoNewWindow:$false | Out-Null
+        }
         default { } # Write-Host "Unhandled click on button $($e.OriginalSource.Name)" }
       }
     }
