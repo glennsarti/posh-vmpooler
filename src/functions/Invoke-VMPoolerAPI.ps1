@@ -2,7 +2,7 @@
 Add-type @"
     using System.Net;
     using System.Security.Cryptography.X509Certificates;
-    
+
     public class IDontCarePolicy : ICertificatePolicy {
         public IDontCarePolicy() {}
         public bool CheckValidationResult(
@@ -49,12 +49,12 @@ Function Invoke-VMPoolerAPI {
       'URI' = "$url/$route"
       'Method' = $Method
     }
-    
+
     if ($payload -ne $null) {
       if ($Method -eq 'GET') { $props.Method = 'POST' }
       $props.Body = ConvertTo-JSON -InputObject $payload -Depth 10
     }
-    
+
     switch ($PSCmdlet.ParameterSetName) {
       'NoAuth' { } # Do Nothing
       'CredAuth' {
@@ -63,7 +63,7 @@ Function Invoke-VMPoolerAPI {
           if ($newCred -eq $null) { Throw "Missing required credentials for VMPooler"; return }
           $Script:VMPoolCredential = $newCred
         }
-        
+
         $props.Credential = $VMPoolCredential
       }
       'TokenAuth' {
@@ -76,13 +76,13 @@ Function Invoke-VMPoolerAPI {
     }
 
     [System.Net.ServicePointManager]::CertificatePolicy = new-object IDontCarePolicy
-    $response = $null
+    $objResponse = $null
     $CachedFile = ''
     if ($CacheMode) {
       # Make sure the CacheDir exists
       $CacheDir = Join-Path -Path ((Get-Location -PSProvider FileSystem).Path) -ChildPath 'cache'
       if (-not (Test-Path -Path $CacheDir)) { New-Item -Path $CacheDir -ItemType Directory | Out-Null}
-      
+
       # Generate the ID of the request
       $propsString = ($props | ConvertTo-Json -Depth 10)
       $md5 = new-object -TypeName System.Security.Cryptography.MD5CryptoServiceProvider
@@ -94,27 +94,25 @@ Function Invoke-VMPoolerAPI {
       # Read Cached response if it exists
       if (Test-Path -Path $CachedFile) {
         Write-Verbose "Using cached response from $CachedFile"
-        $response = @{ 'Content' = ([System.IO.File]::ReadAllText($CachedFile) ) }
-      }
-    }
-    
-    # Do the web request
-    if ($response -eq $null) { $response = Invoke-WebRequest @props }
-    
-    # Cache the response
-    if ($CacheMode) {
-      if (-not (Test-Path -Path $CachedFile)) {
-        [System.IO.File]::WriteAllText($CachedFile, $response.Content)
+        $objResponse = ([System.IO.File]::ReadAllText($CachedFile) ) | ConvertFrom-JSON
       }
     }
 
-    $objResponse = ($response.Content | ConvertFrom-JSON)
-    
+    # Do the web request
+    if ($objResponse -eq $null) { $objResponse = Invoke-RestMethod @props }
+
+    # Cache the response
+    if ($CacheMode) {
+      if (-not (Test-Path -Path $CachedFile)) {
+        [System.IO.File]::WriteAllText($CachedFile, ($objResponse | ConvertTo-JSON -Depth 10))
+      }
+    }
+
     if ($NoParseResponse)
     {
       return $objResponse
     }
-    
+
     if (-not $objResponse.ok)
     {
       Write-Error "Error while invoking Pooler API"
@@ -124,7 +122,7 @@ Function Invoke-VMPoolerAPI {
     {
       $objResponse.PSObject.Properties.Remove('ok')
     }
-    
+
     Write-Output $objResponse
   }
 }
