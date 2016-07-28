@@ -3,8 +3,8 @@ function Add-EventHandler {
     .Synopsis
         Adds an event handler to an object
     .Description
-        Adds an event handler to an object.  If the object has a 
-        resource dictionary, it will add an eventhandlers 
+        Adds an event handler to an object.  If the object has a
+        resource dictionary, it will add an eventhandlers
         hashtable to that object and it will store the event handler,
         so it can be removed later.
     .Example
@@ -18,7 +18,7 @@ function Add-EventHandler {
         The script block that will handle the event
     .Parameter SourceType
         For RoutedEvents, the type that originates the event
-    .Parameter PassThru 
+    .Parameter PassThru
         If this is set, the delegate that is added to the object will
         be returned from the function.
     #>
@@ -27,23 +27,23 @@ function Add-EventHandler {
     [ValidateNotNull()]
     [Alias("Object")]
     $InputObject,
-    
+
     [Parameter(Mandatory=$true, Position=1)]
     [String]
     $EventName,
-    
+
     [Parameter(Mandatory=$true, Position=2)]
     [ScriptBlock]
     $Handler,
-    
+
     [Parameter(Mandatory=$false)]
     [String]
     $SourceType,
-    
+
     [Switch]
-    $PassThru  
+    $PassThru
     )
-    
+
     process {
         if($SourceType) {
             $Type = $SourceType -as [Type]
@@ -57,17 +57,17 @@ function Add-EventHandler {
         } else {
             $Type = $InputObject.GetType()
         }
-        
+
         if ($eventName.StartsWith("On_")) {
             $eventName = $eventName.Substring(3)
         }
-        
+
         $Event = $Type.GetEvent($EventName, [Reflection.BindingFlags]"IgnoreCase, Public, Instance")
         if (-not $Event) {
             Write-Error "Handler $EventName does not exist on $InputObject"
             return
-        }       
-                
+        }
+
         $realHandler = ([ScriptBlock]::Create(@"
   `$sender = `$args[0]
   `$e      = `$args[1]
@@ -79,11 +79,11 @@ function Add-EventHandler {
 # `$eventName = 'On_$eventName';
 # . Initialize-EventHandler
 # `$ErrorActionPreference = 'stop'
-            
+
 # $Handler
 
-# trap {                        
-#     . Write-WPFError `$_    
+# trap {
+#     . Write-WPFError `$_
 #     continue
 # }
 # "@)) -as $event.EventHandlerType
@@ -93,7 +93,7 @@ function Add-EventHandler {
         } else {
 
             if ($InputObject.Resources) {
-                
+
                 if (-not $InputObject.Resources.EventHandlers) {
                     $InputObject.Resources.EventHandlers = @{}
                 }
@@ -105,7 +105,7 @@ function Add-EventHandler {
             $RealHandler
         }
     }
-} 
+}
 
 
 Function Get-VMPoolerAllVMsAsXML {
@@ -117,7 +117,7 @@ Function Get-VMPoolerAllVMsAsXML {
     $xmlToken.SetAttribute('created',$_.created)
     $xmlToken.SetAttribute('lastuse',$_.last)
     $xmlDoc.poolerdetail.AppendChild($xmlToken) | Out-Null
-    
+
     # Convert all the VMs
     $_.VMs_all | % { Get-VMPoolerVM -VM $_ } | % {
       $xmlVM = $xmlDoc.CreateElement('vm')
@@ -127,11 +127,11 @@ Function Get-VMPoolerAllVMsAsXML {
       $xmlVM.SetAttribute('lifetime',$_.lifetime)
       $xmlVM.SetAttribute('running',$_.running)
       $xmlVM.SetAttribute('state',$_.state)
-      
+
       if ($_.tags -ne $null) {
         # Append tag elements
         $tags = $_.tags
-        Get-Member -InputObject $_.tags -MemberType NoteProperty | % { 
+        Get-Member -InputObject $_.tags -MemberType NoteProperty | % {
           $tagName = $_.Name
           $xmlNode = $xmlDoc.CreateElement('tag')
           $xmlNode.SetAttribute('key',$tagName)
@@ -166,11 +166,11 @@ Function Get-VMPoolerAllVMsAsXML {
 }
 
 
-function Get-VMPoolerPoolAsXML {
-  [xml]$xmlDoc = '<pools xmlns=""></pools>'
-
+function Get-VMPoolerPoolIcon($PoolName)
+{
   # Last match wins
-  $osIconList = @(
+  $osIcon = ''
+  @(
     '^debian-;http://icons.iconarchive.com/icons/tatice/operating-systems/16/Debian-icon.png',
     '^centos-;https://www.centos.org/favicon.ico',
     '^cisco-;http://natisbad.org/RH0/img/cisco-icon.png',
@@ -186,22 +186,27 @@ function Get-VMPoolerPoolAsXML {
     '^win;http://icons.iconarchive.com/icons/dakirby309/simply-styled/16/OS-Windows-icon.png',
     '^win-20;http://www.easyhost.com/site/media/hw/icon-windows-small2.png',
     '^win-10;http://www.tobiidynavox.com/wp-content/uploads/2015/10/Icon_windows8_16x16.png'
-  )
+  ) | % {
+    $os = $_.Split(';')
+    if ($PoolName -match $os[0]) { $osIcon = $os[1] }
+  }
+
+  Write-Output $osIcon
+}
+
+function Get-VMPoolerPoolAsXML {
+  [xml]$xmlDoc = '<pools xmlns=""></pools>'
 
   Get-VMPoolerPool | % {
-    $poolName = $_.ToString() 
+    $poolName = $_.ToString()
     $xmlNode = $xmlDoc.CreateElement('pool')
     $xmlNode.innerText = $poolName
 
     # Get OS Icon
-    $osIcon = ''
-    $osIconList | % {
-      $os = $_.Split(';')
-      if ($poolName -match $os[0]) { $osIcon = $os[1] }
-    }
+    $osIcon =  Get-VMPoolerPoolIcon -poolname $poolName
     if ($osIcon -ne '') { $xmlNode.SetAttribute('osicon',$osIcon) }
 
-    $xmlDoc.pools.AppendChild($xmlNode) | Out-Null   
+    $xmlDoc.pools.AppendChild($xmlNode) | Out-Null
   }
   Write-Output $xmlDoc
 }
@@ -215,10 +220,10 @@ function Start-VMPoolerUI {
     ,[Parameter(Mandatory=$false,ValueFromPipeline=$false)]
     [PSCredential]$Credential = [System.Management.Automation.PSCredential]::Empty
   )
-  
+
   Begin {
   }
-  
+
   Process {
     # if ($URL.EndsWith('/')) { $URL = $URL.SubString(0,$URL.Length - 1)}
     # try {
@@ -228,18 +233,18 @@ function Start-VMPoolerUI {
     #   Write-Error "Could not connect to VMPooler at $url"
     #   return
     # }
-    
+
     # $Script:VMPoolerServiceURI = $URL
-    
+
     # if ($Credential -ne [System.Management.Automation.PSCredential]::Empty) {
     #   $Script:VMPoolCredential = $Credential
     # }
-    
+
 
     # Load XAML from the external file
     Write-Verbose "Loading the window XAML..."
     [xml]$xaml = (Get-Content (Join-Path -Path $PSScriptRoot -ChildPath 'poolerui\PoolerUI.xaml'))
-    
+
     # Build the GUI
     Write-Verbose "Parsing the window XAML..."
     $reader = (New-Object System.Xml.XmlNodeReader $xaml)
@@ -250,14 +255,14 @@ function Start-VMPoolerUI {
 
     (Get-WPFControl 'btnCreateVM' -Window $thisWindow).Add_Click({
       [string]$PoolName = (Get-WPFControl 'cboTemplates' -Window $thisWindow).SelectedValue
-      
+
       if ($Poolname -ne '') {
         try {
           New-VMPoolerVM -Pool $PoolName
           (Get-WPFControl 'xmlPoolerDetail' -Window $thisWindow).Document = (Get-VMPoolerAllVMsAsXML)
         } catch {
           Write-Warning "Unable to create a VM in pool $PoolName"
-        } 
+        }
       }
     })
 
@@ -319,24 +324,24 @@ function Start-VMPoolerUI {
         default { } # Write-Host "Unhandled click on button $($e.OriginalSource.Name)" }
       }
     }
-    
+
     if ($Credential -ne [System.Management.Automation.PSCredential]::Empty) {
       Connect-VMPooler -URL $URL -Credential $Credential | Out-Null
     } else {
       Connect-VMPooler -URL $URL | Out-Null
-    } 
+    }
     # Write the xml document to the XAML for databinding
     (Get-WPFControl 'xmlPoolList' -Window $thisWindow).Document = (Get-VMPoolerPoolAsXML)
     (Get-WPFControl 'xmlPoolerDetail' -Window $thisWindow).Document = (Get-VMPoolerAllVMsAsXML)
-    
+
     # Show the GUI
     Write-Verbose "Showing the window..."
     [void]($thisWindow.ShowDialog())
     Write-Verbose "Cleanup..."
     $thisWindow.Close()
-    $thisWindow = $null    
+    $thisWindow = $null
   }
-  
+
   End {
   }
 
