@@ -300,6 +300,15 @@ function Start-VMPoolerUI {
             -ArgumentList @('-NoExit',"`"& { Enter-PSSession -Computername '$($vm.FQDN)' -Credential Administrator }`"") `
             -Wait:$false -NoNewWindow:$false | Out-Null
         }
+        "butAddTime" {
+          $vm = Get-VMPoolerVM -VM $ButtonTag
+
+          $lifetime = $vm.lifetime + 2
+
+          $vm | Set-VMPoolerVMOptions -LifeTime $lifetime | Out-Null
+
+          (Get-WPFControl 'xmlPoolerDetail' -Window $thisWindow).Document = (Get-VMPoolerAllVMsAsXML)
+        }
         "butConnectSSH" {
           $vm = Get-VMPoolerVM -VM $ButtonTag
 
@@ -324,7 +333,7 @@ function Start-VMPoolerUI {
             -ArgumentList @("$($vm.FQDN)") `
             -Wait:$false -NoNewWindow:$false | Out-Null
         }
-        default { } # Write-Host "Unhandled click on button $($e.OriginalSource.Name)" }
+        default {  Write-Host "Unhandled click on button $($e.OriginalSource.Name)" }
       }
     }
 

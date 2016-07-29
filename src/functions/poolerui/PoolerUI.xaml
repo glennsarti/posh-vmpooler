@@ -145,8 +145,7 @@
                     </StackPanel>
                   </Border>
                   <StackPanel Orientation="Horizontal" Grid.Column="1" HorizontalAlignment="Right">
-                    <!-- TODO Figure out add time button -->
-                    <Button IsEnabled="False" Tag="{Binding XPath=@name}" x:Name="butAddTime" FontFamily="Segoe UI Symbol" Padding="2" Margin="2" ToolTip="Add more time">&#xE121;&#xE109;</Button>
+                    <Button Tag="{Binding XPath=@name}" x:Name="butAddTime" FontFamily="Segoe UI Symbol" Padding="2" Margin="2" ToolTip="Add two hours">&#xE121;&#xE109;2h</Button>
                     <Button Tag="{Binding XPath=@name}" x:Name="butConnectRDP" FontFamily="Segoe UI Symbol" Padding="2" Margin="2" ToolTip="Connect via RDP">&#xE148;</Button>
                     <Button Tag="{Binding XPath=@name}" x:Name="butConnectPS" Padding="2" Margin="2" ToolTip="Connect via Powershell">PS&gt;</Button>
                     <Button Tag="{Binding XPath=@name}" x:Name="butConnectSSH" Padding="2" Margin="2" ToolTip="Connect via SSH">SSH&gt;</Button>
