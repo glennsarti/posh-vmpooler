@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:vmpoolui"
-        Title="MainWindow" Height="600" Width="800">
+        Title="POSH VM Pooler" Height="600" Width="800">
   <!-- http://www.wpf-tutorial.com/list-controls/itemscontrol/ -->
   <!-- http://brianlagunas.com/free-metro-light-and-dark-themes-for-wpf-and-silverlight-microsoft-controls/ -->
   <!-- http://www.jonathanantoine.com/2012/03/05/winjs-out-of-the-box-available-icons/ -->
@@ -89,7 +89,18 @@
                   <Button Tag="{Binding XPath=@name}" x:Name="butDeleteVM" Grid.Column="1" FontFamily="Segoe UI Symbol" Padding="2" Margin="2" ToolTip="Remove VM" Foreground="#FFF91E1E" HorizontalAlignment="Right">&#xE107;</Button>
                 </Grid>
 
-                <TextBlock Text="{Binding XPath=@template}" />
+                <StackPanel Orientation="Horizontal">
+                  <Canvas Width="22" Height="22">
+                    <Ellipse Width="22" Height="22" Fill="White" Stroke="{DynamicResource {x:Static SystemColors.ControlDarkBrushKey}}" StrokeThickness="1"/>
+                    <Ellipse Width="16" Height="16" Canvas.Left="3" Canvas.Top="3">
+                      <Ellipse.Fill>
+                        <ImageBrush ImageSource="{Binding XPath=@TemplateIcon}" />
+                      </Ellipse.Fill>
+                    </Ellipse>
+                  </Canvas>
+                  <TextBlock Margin="3, 1" Text="{Binding XPath=@template}"/>
+                </StackPanel>
+
                 <!-- Tags -->
                 <ItemsControl ItemsSource="{Binding XPath=tag}">
                   <ItemsControl.ItemsPanel>

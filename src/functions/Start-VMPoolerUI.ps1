@@ -159,6 +159,9 @@ Function Get-VMPoolerAllVMsAsXML {
       $xmlVM.SetAttribute('Expires',$_.Expires)
       $xmlVM.SetAttribute('MinutesLeft',$_.MinutesLeft)
       $xmlVM.SetAttribute('PrettyMinutesLeft',$PrettyMins)
+      $poolIcon = Get-VMPoolerPoolIcon -Poolname ($_.template)
+      $xmlVM.SetAttribute('TemplateIcon',$poolIcon)
+
       $xmlToken.AppendChild($xmlVM) | Out-Null
     }
   }
