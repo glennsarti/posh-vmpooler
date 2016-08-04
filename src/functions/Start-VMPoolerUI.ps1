@@ -127,6 +127,11 @@ Function Get-VMPoolerAllVMsAsXML {
       $xmlVM.SetAttribute('lifetime',$_.lifetime)
       $xmlVM.SetAttribute('running',$_.running)
       $xmlVM.SetAttribute('state',$_.state)
+      if ($_.ip -eq '') {
+        $xmlVM.SetAttribute('ip','MISSING!')
+      } else {
+        $xmlVM.SetAttribute('ip',$_.ip)
+      }
 
       if ($_.tags -ne $null) {
         # Append tag elements
