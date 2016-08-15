@@ -151,8 +151,11 @@ Function Get-VMPoolerAllVMsAsXML {
         $PrettyMins = 'Now'
       } else {
         $ts = New-TimeSpan -Minutes $_.MinutesLeft
+        if ($ts.Days -gt 0) {
+          $PrettyMins = $PrettyMins + "$($ts.Days)d "
+        }
         if ($ts.Hours -gt 0) {
-          $PrettyMins = "$($ts.Hours)h "
+          $PrettyMins = $PrettyMins + "$($ts.Hours)h "
         }
         if ($ts.Minutes -gt 0) {
           $PrettyMins = $PrettyMins + "$($ts.Minutes)m"
