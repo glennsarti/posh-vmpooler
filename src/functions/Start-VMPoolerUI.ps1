@@ -6,7 +6,10 @@ function Start-VMPoolerUI {
 
     ,[Parameter(Mandatory=$false,ValueFromPipeline=$false)]
     [PSCredential]$Credential = [System.Management.Automation.PSCredential]::Empty
-  )
+  
+    ,[Parameter(Mandatory=$false,ValueFromPipeline=$false)]
+    [switch]$SaveCredentials = $false
+)
 
   Begin {
   }
@@ -53,6 +56,7 @@ function Start-VMPoolerUI {
       $vp = ($VerbosePreference -eq 'Continue')
 
       $PoolerURI = (Get-WPFControl 'cboPoolerURL' -Window $thisWindow).Text
+      $saveCreds = ((Get-WPFControl 'chkSaveCreds' -Window $thisWindow).IsChecked -eq $true)
 
       $result = $false
       $connErr = $null
@@ -66,13 +70,14 @@ function Start-VMPoolerUI {
         if ($connErr -eq $null) { throw "Could not connect to $PoolerURI"; return }
         if ($connErr.Message -notlike '*Credentials Missing*') { Throw $conErr; return }
 
-        $result = Connect-VMPooler -URL $PoolerURI -Credential (Get-Credential -Message "Connect to $PoolerURI" -ErrorAction Stop) -ErrorAction Stop -Verbose:$vp
+        $result = Connect-VMPooler -URL $PoolerURI -SaveCredentials:$saveCreds -Credential (Get-Credential -Message "Connect to $PoolerURI" -ErrorAction Stop) -ErrorAction Stop -Verbose:$vp
       }
 
       if (-not $result) { Throw "Unable to connect"; return }
    
       (Get-WPFControl 'cboPoolerURL' -Window $thisWindow).IsEnabled = $false
       (Get-WPFControl 'btnConnectPooler' -Window $thisWindow).IsEnabled = $false
+      (Get-WPFControl 'chkSaveCreds' -Window $thisWindow).IsEnabled = $false
       (Get-WPFControl 'butRefresh' -Window $thisWindow).IsEnabled = $true
       (Get-WPFControl 'cboTemplates' -Window $thisWindow).IsEnabled = $true
       (Get-WPFControl 'btnCreateVM' -Window $thisWindow).IsEnabled = $true
@@ -150,6 +155,7 @@ function Start-VMPoolerUI {
     # Init the disabled UI
     (Get-WPFControl 'cboPoolerURL' -Window $thisWindow).IsEnabled = $false
     (Get-WPFControl 'btnConnectPooler' -Window $thisWindow).IsEnabled = $false
+    (Get-WPFControl 'chkSaveCreds' -Window $thisWindow).IsEnabled = $false
     (Get-WPFControl 'butRefresh' -Window $thisWindow).IsEnabled = $false
     (Get-WPFControl 'cboTemplates' -Window $thisWindow).IsEnabled = $false
     (Get-WPFControl 'btnCreateVM' -Window $thisWindow).IsEnabled = $false
@@ -166,7 +172,7 @@ function Start-VMPoolerUI {
 
     if ($URL -ne '') {
       if ($Credential -ne [System.Management.Automation.PSCredential]::Empty) {
-        Connect-VMPooler -URL $URL -Credential $Credential | Out-Null
+        Connect-VMPooler -URL $URL -Credential $Credential -SaveCredentials:$SaveCredentials | Out-Null
       } else {
         Connect-VMPooler -URL $URL | Out-Null
       }
@@ -180,6 +186,7 @@ function Start-VMPoolerUI {
     } else {
       (Get-WPFControl 'cboPoolerURL' -Window $thisWindow).IsEnabled = $true
       (Get-WPFControl 'btnConnectPooler' -Window $thisWindow).IsEnabled = $true      
+      (Get-WPFControl 'chkSaveCreds' -Window $thisWindow).IsEnabled = $true
     }
 
     # Show the GUI

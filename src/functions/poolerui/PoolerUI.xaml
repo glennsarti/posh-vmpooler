@@ -32,7 +32,8 @@
             <ComboBoxItem IsSelected="True">https://vmpooler.delivery.puppetlabs.net/api/v1</ComboBoxItem>
           </ComboBox>
           <Button x:Name="btnConnectPooler" Content="Connect" />
-          <Button x:Name="btnSaveCreds" Content="TODO SaveCreds" />
+          <CheckBox x:Name="chkSaveCreds" FontFamily="Segoe UI Symbol" Padding="1" Margin="1" IsThreeState="True"
+                    IsChecked="True" ToolTip="When selected credentials will be saved for reuse">&#xE192;</CheckBox>
           <Separator/>
           <Button x:Name="butRefresh" FontFamily="Segoe UI Symbol" Padding="1" Margin="1" ToolTip="Refresh List" HorizontalAlignment="Center" Foreground="#FF199B37">&#xE149;
           </Button>
