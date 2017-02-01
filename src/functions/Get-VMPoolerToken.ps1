@@ -15,19 +15,25 @@ Function Get-VMPoolerToken {
       return (New-Object -TypeName PSObject -Property $propertyHash)      
     }
 
-    $result = Invoke-VMPoolerAPI -route 'token'
+    try {
+      $result = Invoke-VMPoolerAPI -route 'token'
 
-    Get-Member -InputObject $result -MemberType NoteProperty | % {
-      
-      $tokenName = $_.Name
-      $objToken = $result."$tokenName"
-      $propertyHash = @{ 'TokenID' = $tokenName }
-      
-      $objToken | Get-Member -MemberType NoteProperty | % {
-        $propertyHash."$($_.Name)" = $objToken."$($_.Name)" 
+      Get-Member -InputObject $result -MemberType NoteProperty | % {
+        
+        $tokenName = $_.Name
+        $objToken = $result."$tokenName"
+        $propertyHash = @{ 'TokenID' = $tokenName }
+        
+        $objToken | Get-Member -MemberType NoteProperty | % {
+          $propertyHash."$($_.Name)" = $objToken."$($_.Name)" 
+        }
+              
+        Write-Output (New-Object -TypeName PSObject -Property $propertyHash)
       }
-            
-      Write-Output (New-Object -TypeName PSObject -Property $propertyHash)
+    }
+    catch {
+      # Errors here indicate either the use has no tokens assigned
+      # or bad username password
     }
   }
   
