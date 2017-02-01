@@ -8,7 +8,7 @@ Function Set-VMPoolerVMOptions {
     ,[Parameter(Mandatory=$false,ValueFromPipeline=$false)]
     [HashTable]$Tags = @{}
 
-    ,[Parameter(Mandatory=$false,ValueFromPipeline=$false)]
+    ,[Parameter(Mandatory=$false,ValueFromPipeline=$false,HelpMessage='Lifetime in hours')]
     [ValidateRange(1,72)]
     [Alias('TTL','LifeTime')]
     [int]$TimeToLive = 0
