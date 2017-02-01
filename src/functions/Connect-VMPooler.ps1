@@ -1,17 +1,30 @@
 function Connect-VMPooler {
-  [cmdletBinding(SupportsShouldProcess=$false,ConfirmImpact='Low',DefaultParameterSetName='NoCreds')]
+  [cmdletBinding(SupportsShouldProcess=$false,ConfirmImpact='Low',DefaultParameterSetName='URLNoCreds')]
   param (
-    [Parameter(Mandatory=$true,ValueFromPipeline=$true)]
-    [string]$URL = ''
 
-    ,[Parameter(Mandatory=$true,ValueFromPipeline=$false,ParameterSetName='WithCredential')]
-    [PSCredential]$Credential = [System.Management.Automation.PSCredential]::Empty
+
+#Get-VMPoolerSavedCredentialURL
+    [Parameter(Mandatory=$true,ValueFromPipeline=$false,ParameterSetName='DefaultURLWithCredential')]
+    [Parameter(Mandatory=$true,ValueFromPipeline=$false,ParameterSetName='DefaultURLNoCreds')]
+    [switch]$DefaultURL = $false,
+
+    [Parameter(Mandatory=$true,ValueFromPipeline=$true,ParameterSetName='URLWithCredential')]
+    [Parameter(Mandatory=$true,ValueFromPipeline=$true,ParameterSetName='URLNoCreds')]
+    [string]$URL = '',
+
+    [Parameter(Mandatory=$true,ValueFromPipeline=$false,ParameterSetName='URLWithCredential')]
+    [Parameter(Mandatory=$true,ValueFromPipeline=$false,ParameterSetName='DefaultURLWithCredential')]
+    [PSCredential]$Credential = [System.Management.Automation.PSCredential]::Empty,
     
-    ,[Parameter(Mandatory=$false,ValueFromPipeline=$false,ParameterSetName='WithCredential')]
+    [Parameter(Mandatory=$false,ValueFromPipeline=$false,ParameterSetName='URLWithCredential')]
+    [Parameter(Mandatory=$false,ValueFromPipeline=$false,ParameterSetName='DefaultURLWithCredential')]
     [switch]$SaveCredentials = $false
   )
   
   Begin {
+    if ($DefaultURL) {
+      $URL = [string](Get-VMPoolerSavedCredentialURL | Select-Object -First 1)
+    }
   }
   
   Process {
@@ -25,10 +38,10 @@ function Connect-VMPooler {
       return $false
     }
     $Script:VMPoolerServiceURI = $URL
-    
+
     # Process credentials
-    switch ($PsCmdlet.ParameterSetName) {
-      "WithCredential" {
+    switch -Wildcard ($PsCmdlet.ParameterSetName) {
+      "*WithCredential" {
         if ($Credential -eq [System.Management.Automation.PSCredential]::Empty) {
           $Credential = Get-Credential -UserName ($Env:Username) -Message "Credential to access VM Pooler"
         }
@@ -51,7 +64,7 @@ function Connect-VMPooler {
         }
         
       } 
-      "NoCreds" {
+      "*NoCreds" {
         # Load from environment variables
         $TokenID = [string](Get-Item ENV:'VMPOOL_TOKEN' -ErrorAction SilentlyContinue).Value
         $TokenUsername = [string](Get-Item ENV:'LDAP_USERNAME' -ErrorAction SilentlyContinue).Value
