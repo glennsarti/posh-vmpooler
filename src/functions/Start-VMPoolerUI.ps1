@@ -112,7 +112,7 @@ function Start-VMPoolerUI {
         "butConnectPS" {
           $vm = Get-VMPoolerVM -VM $ButtonTag
           Start-Process -FilePath "powershell.exe" `
-            -ArgumentList @('-NoExit',"`"& { Enter-PSSession -Computername '$($vm.FQDN)' -Credential Administrator }`"") `
+            -ArgumentList @('-NoExit',"`"& { Enter-PSSession -Computername '$($vm.FQDN)' -Credential '$($vm.FQDN)\Administrator' -UseSSL -SessionOption (New-PSSessionOption -SkipCACheck) }`"") `
             -Wait:$false -NoNewWindow:$false | Out-Null
         }
         "butAddTime" {
