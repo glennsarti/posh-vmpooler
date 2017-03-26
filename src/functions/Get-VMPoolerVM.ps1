@@ -14,6 +14,8 @@ Function Get-VMPoolerVM {
 
     $dateFormat = 'yyyy-MM-dd HH:mm:ss zzz'
 
+Write-Host ($result | ConvertTo-JSON -Depth 10) -ForegroundColor CYan
+
     Get-Member -InputObject $result -MemberType NoteProperty | % {
       $vmName = $_.Name
       $objToken = ($result."$vmName")
@@ -31,7 +33,11 @@ Function Get-VMPoolerVM {
       Add-Member -InputObject $objToken -MemberType NoteProperty -Name "Started" -Value $Started.ToString($dateFormat)
       Add-Member -InputObject $objToken -MemberType NoteProperty -Name "Expires" -Value $Expires.ToString($dateFormat)
       Add-Member -InputObject $objToken -MemberType NoteProperty -Name "MinutesLeft" -Value $MinutesLeft.ToString("0")
-       
+
+      if (-not ($objToken.PSobject.Properties.Name -contains "snapshots")) {
+        Add-Member -InputObject $objToken -MemberType NoteProperty -Name "snapshots" -Value @()
+      }
+
       Write-Output $objToken
     }
   }

@@ -46,20 +46,21 @@ function Connect-VMPooler {
           $Credential = Get-Credential -UserName ($Env:Username) -Message "Credential to access VM Pooler"
         }
         $Script:VMPoolCredential = $Credential
-        
-        if ($SaveCredentials) {
-          # Get the TokenID
-          $TokenID = ""
-          Get-VMPoolerToken | Select -First 1 | % { $TokenID = $_.TokenID }
-          if ($TokenID -eq "") {
-            $newToken = New-VMPoolerToken
-            $TokenID = $newToken.TokenID
-          }
-          if ($TokenID -eq '') {
-            throw "Unable to create a VM Pooler token"
-            return $false
-          }    
 
+        # Get the TokenID
+        $TokenID = ""
+        Get-VMPoolerToken | Select -First 1 | % { $TokenID = $_.TokenID }
+        if ($TokenID -eq "") {
+          $newToken = New-VMPoolerToken
+          $TokenID = $newToken.TokenID
+        }
+        if ($TokenID -eq '') {
+          throw "Unable to create a VM Pooler token"
+          return $false
+        }
+        $Script:VMPoolToken = $TokenID
+
+        if ($SaveCredentials) {
           Save-VMPoolerCredentials -PoolerURL $Script:VMPoolerServiceURI.ToLower() -TokenID $TokenID -Username ($Script:VMPoolCredential).Username | Out-Null
         }
         

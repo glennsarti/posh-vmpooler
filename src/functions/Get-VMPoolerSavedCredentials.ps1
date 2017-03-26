@@ -14,10 +14,10 @@ function Get-VMPoolerSavedCredentials {
     $encString = ''
     $regKey = 'Registry::HKEY_CURRENT_USER\Software\PoshVMPooler\VMPooler'
     try {
-      $objRegValue = Get-ItemProperty -Path $regkey -Name $key
+      $objRegValue = Get-ItemProperty -Path $regkey -Name $key -ErrorAction 'Stop'
       $encString = $objRegValue."$($key)"
     }
-    catch [System.Exception] {
+    catch {
       # Any error assume the key does not exist
       $encString = ''
     }
