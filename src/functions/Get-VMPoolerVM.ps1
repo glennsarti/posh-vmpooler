@@ -14,8 +14,6 @@ Function Get-VMPoolerVM {
 
     $dateFormat = 'yyyy-MM-dd HH:mm:ss zzz'
 
-Write-Host ($result | ConvertTo-JSON -Depth 10) -ForegroundColor CYan
-
     Get-Member -InputObject $result -MemberType NoteProperty | % {
       $vmName = $_.Name
       $objToken = ($result."$vmName")
@@ -36,6 +34,9 @@ Write-Host ($result | ConvertTo-JSON -Depth 10) -ForegroundColor CYan
 
       if (-not ($objToken.PSobject.Properties.Name -contains "snapshots")) {
         Add-Member -InputObject $objToken -MemberType NoteProperty -Name "snapshots" -Value @()
+      }
+      if (-not ($objToken.PSobject.Properties.Name -contains "disk")) {
+        Add-Member -InputObject $objToken -MemberType NoteProperty -Name "disk" -Value @()
       }
 
       Write-Output $objToken
